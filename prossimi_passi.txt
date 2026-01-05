@@ -1,0 +1,21 @@
+Query guidata
+Se manca un filtro → mostra dimensioni mancanti + esempi codici
+(UX per umani, zero sigle da indovinare)
+
+Supporto frequenze A / M
+_gen_years, _gen_months accanto ai quarterly
+
+Output alternativi
+
+JSON semplice
+
+pandas DataFrame (opzionale)
+
+dump su file (json/csv)
+
+Mini-CLI
+
+statdata sources
+statdata datasets eurostat
+statdata describe eurostat LFSQ_UGAD
+statdata fetch ...
