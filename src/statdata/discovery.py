@@ -115,10 +115,6 @@ def describe_dataset(source_id: str, dataset: str) -> list[DimensionInfo]:
 
 
 def list_dimension_codes(source_id: str, dataset: str, dim_id: str, *, max_items: int | None = 200) -> list[CodeInfo]:
-    """
-    Ritorna i codici ammessi per una dimensione del dataset (con label).
-    Nota: non tutte le fonti espongono label complete per ogni code in modo uniforme.
-    """
     c = get_client(source_id)
     msg = c.datastructure(dataset)
 
@@ -130,71 +126,89 @@ def list_dimension_codes(source_id: str, dataset: str, dim_id: str, *, max_items
     if dsd_obj is None:
         raise RuntimeError("DSD non disponibile.")
 
-    # trova la dimensione e la sua codelist/enumeration
+    # recupera dimensioni
     dims = []
     for path in (("dimensions", "series"), ("dimensions", "observation"), ("dimensions",)):
         cur = dsd_obj
-        ok = True
         for p in path:
             if not hasattr(cur, p):
-                ok = False
                 break
             cur = getattr(cur, p)
-        if ok and cur:
-            dims = list(cur)
-            break
+        else:
+            if cur:
+                dims = list(cur)
+                break
 
+    # trova la dimensione richiesta
     target = None
     for d in dims:
         if getattr(d, "id", None) == dim_id:
             target = d
             break
+
     if target is None:
-        raise KeyError(f"Dimensione {dim_id!r} non trovata in dataset {dataset!r}")
+        raise KeyError(f"Dimensione {dim_id!r} non trovata")
 
     enum = getattr(target, "local_representation", None)
     enum = getattr(enum, "enumerated", None) if enum is not None else None
+
+    print(f"[DEBUG] enum type: {type(enum)}")
+
     if enum is None:
-        # dimensione libera/non enumerata
+        print("[DEBUG] enum=None → nessuna codelist")
         return []
 
+    out: list[CodeInfo] = []
 
-    # enum è spesso una Codelist con .items() o .codes
-    codes: list[CodeInfo] = []
-
-    # Caso 1: enum è un dict {code: obj}
+    # CASO A: enum è dict
     if isinstance(enum, dict):
+        print(f"[DEBUG] enum dict con {len(enum)} elementi")
         for code, obj in enum.items():
-            codes.append(CodeInfo(code=str(code), name=_pick_name(obj)))
-            if max_items is not None and len(codes) >= max_items:
+            out.append(CodeInfo(code=str(code), name=_pick_name(obj)))
+            if max_items and len(out) >= max_items:
                 break
-        return codes
+        return out
 
-    # Caso 2: enum ha .items() (codelist dict-like)
-    items_attr = getattr(enum, "items", None)
-    if callable(items_attr):
-        for code, obj in enum.items():
-            codes.append(CodeInfo(code=str(code), name=_pick_name(obj)))
-            if max_items is not None and len(codes) >= max_items:
+    # CASO B: enum ha .items()
+    if hasattr(enum, "items") and callable(enum.items):
+        items = list(enum.items())
+        print(f"[DEBUG] enum.items() con {len(items)} elementi")
+        for code, obj in items:
+            out.append(CodeInfo(code=str(code), name=_pick_name(obj)))
+            if max_items and len(out) >= max_items:
                 break
-        return codes
+        return out
 
-    # Caso 3: enum ha .codes (lista)
-    codes_attr = getattr(enum, "codes", None)
-    if codes_attr is not None:
-        for obj in codes_attr:
-            codes.append(CodeInfo(code=str(getattr(obj, "id", "")), name=_pick_name(obj)))
-            if max_items is not None and len(codes) >= max_items:
-                break
-        return codes
-
-    return []
-
-
-    # fallback
+    # CASO C: enum ha .codes
     if hasattr(enum, "codes"):
-        for obj in enum.codes:
-            codes.append(CodeInfo(code=str(getattr(obj, "id", "")), name=_pick_name(obj)))
-            if max_items is not None and len(codes) >= max_items:
+        codes = list(enum.codes)
+        print(f"[DEBUG] enum.codes con {len(codes)} elementi")
+        for obj in codes:
+            out.append(CodeInfo(code=str(getattr(obj, 'id', '')), name=_pick_name(obj)))
+            if max_items and len(out) >= max_items:
                 break
-    return codes
+        return out
+    
+    # CASO D: sdmx1 Codelist (spesso enum.items è un dict, NON un metodo)
+    items_attr = getattr(enum, "items", None)
+    if isinstance(items_attr, dict):
+        print(f"[DEBUG] Codelist enum.items dict con {len(items_attr)} elementi")
+        for code, obj in items_attr.items():
+            out.append(CodeInfo(code=str(code), name=_pick_name(obj)))
+            if max_items and len(out) >= max_items:
+                break
+        return out
+
+    # fallback: enum iterabile (lista di Code)
+    if hasattr(enum, "__iter__"):
+        seq = list(enum)
+        print(f"[DEBUG] Codelist iterabile con {len(seq)} elementi")
+        for obj in seq:
+            out.append(CodeInfo(code=str(getattr(obj, "id", "")), name=_pick_name(obj)))
+            if max_items and len(out) >= max_items:
+                break
+        return out
+
+
+    print("[DEBUG] enum presente ma formato non gestito")
+    return []
