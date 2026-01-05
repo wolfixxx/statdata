@@ -5,7 +5,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from .client import get_client
+from .discovery import describe_dataset, list_dimension_codes
 
+
+class GuidedQueryError(ValueError):
+    def __init__(self, message: str, details: dict | None = None):
+        super().__init__(message)
+        self.details = details or {}
 
 @dataclass(frozen=True)
 class QuerySpec:
@@ -112,7 +118,27 @@ def build_series_key(spec: QuerySpec, *, require_single_series: bool = True) -> 
                 missing_required.append(did)
 
     if missing_required:
-        raise ValueError(f"Mancano filtri obbligatori per serie singola: {missing_required}")
+        guidance = {}
+
+        dims_info = describe_dataset(spec.source_id, spec.dataset)
+        dims_map = {d.id: d for d in dims_info}
+
+        for did in missing_required:
+            codes = list_dimension_codes(
+                spec.source_id,
+                spec.dataset,
+                did,
+                max_items=10,
+            )
+            guidance[did] = {
+                "description": dims_map.get(did).name if did in dims_map else "",
+                "examples": [(c.code, c.name) for c in codes],
+            }
+
+        raise GuidedQueryError(
+            message="Mancano filtri obbligatori per costruire una serie univoca.",
+            details=guidance,
+        )
 
     series_key = ".".join(key_parts)
 

@@ -23,6 +23,29 @@ def _gen_quarters(start: str, end: str) -> list[str]:
     return out
 
 
+def _gen_years(start: str, end: str) -> list[str]:
+    sy = int(str(start)[:4])
+    ey = int(str(end)[:4])
+    return [str(y) for y in range(sy, ey + 1)]
+
+
+def _gen_months(start: str, end: str) -> list[str]:
+    # start/end: "YYYY-MM"
+    sy, sm = start.split("-")
+    ey, em = end.split("-")
+    y, m = int(sy), int(sm)
+    ey, em = int(ey), int(em)
+
+    out = []
+    while (y < ey) or (y == ey and m <= em):
+        out.append(f"{y:04d}-{m:02d}")
+        m += 1
+        if m == 13:
+            m = 1
+            y += 1
+    return out
+
+
 @dataclass(frozen=True)
 class SeriesPoint:
     period: str          # stringa così com’è (es. "2018-Q1")
@@ -84,10 +107,15 @@ def to_minimal_series_dump(res: FetchResult) -> SeriesDump:
     end = res.params.get("endPeriod")
 
     # mapping per serie trimestrali
-    if start and end and res.series_key.startswith("Q."):
-        time_labels = _gen_quarters(start, end)
+    if start and end:
+        if res.series_key.startswith("Q."):
+            time_labels = _gen_quarters(start, end)
+        elif res.series_key.startswith("A."):
+            time_labels = _gen_years(start, end)
+        elif res.series_key.startswith("M."):
+            time_labels = _gen_months(start, end)
     
-    
+
 
     points: list[SeriesPoint] = []
 
