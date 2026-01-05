@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-import sdmx
+import sdmx  # type: ignore
 
 from .sources import get_source
 
