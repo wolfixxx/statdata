@@ -16,4 +16,4 @@ def get_client(source_id: str) -> sdmx.Client:
     """
     src = get_source(source_id)
     # sdmx.Client accetta un "url" base del provider
-    return sdmx.Client(src.base_url, timeout=60)
+    return sdmx.Client(src.sdmx_id, timeout=60)
