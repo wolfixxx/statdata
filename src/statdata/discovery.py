@@ -60,7 +60,6 @@ def list_dataflows(source_id: str, *, max_items: int | None = 200) -> list[Dataf
 
     return out
 
-from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
