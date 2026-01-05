@@ -1,9 +1,0 @@
-statdata/
-  src/statdata/
-    __init__.py
-    client.py        # wrapper sdmx.Client
-    sources.py       # registry fonti SDMX
-    discovery.py     # dataflows, codelist, concept
-    query.py         # query builder + validazione
-    fetch.py         # download dati
-    formats.py       # output (raw/json/df)

@@ -152,3 +152,32 @@ def to_minimal_series_dump(res: FetchResult) -> SeriesDump:
 
     meta = {"series_count": len(series_map), "obs_count": len(points)}
     return SeriesDump(dataset=res.dataset, series_key=res.series_key, points=points, meta=meta)
+
+def to_simple_json_dict(dump: SeriesDump) -> dict:
+    return {
+        "dataset": dump.dataset,
+        "series_key": dump.series_key,
+        "meta": dump.meta,
+        "data": [{"period": p.period, "value": p.value} for p in dump.points],
+    }
+
+def to_dataframe(dump: SeriesDump):
+    import pandas as pd  # import locale: pandas diventa dipendenza opzionale
+
+    return pd.DataFrame(
+        [{"period": p.period, "value": p.value} for p in dump.points]
+    )
+
+def dump_to_json_file(dump: SeriesDump, path: str) -> None:
+    import json
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(to_simple_json_dict(dump), f, ensure_ascii=False, indent=2)
+
+
+def dump_to_csv_file(dump: SeriesDump, path: str) -> None:
+    import csv
+    with open(path, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["period", "value"])
+        for p in dump.points:
+            w.writerow([p.period, p.value])

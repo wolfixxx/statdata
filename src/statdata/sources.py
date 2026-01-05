@@ -34,7 +34,7 @@ SOURCES: dict[str, Source] = {
     "oecd": Source(
         id="oecd",
         name="OECD",
-        sdmx_id="OECD",
+        sdmx_id="OECD_JSON",
         base_url="https://stats-nxd.oecd.org/restsdmx/sdmx.ashx/",
         notes="OECD SDMX endpoint.",
     ),

@@ -7,6 +7,16 @@ from typing import Iterable
 from .client import get_client
 
 
+def _get_dsd_message(source_id: str, dataset: str):
+    c = get_client(source_id)
+    # 1) prova datastructure (ok per Eurostat, altri)
+    try:
+        return c.datastructure(dataset)
+    except Exception:
+        # 2) fallback: dataflow con references=all (ok per ECB)
+        return c.dataflow(dataset, params={"references": "all"})
+
+
 def _pick_name(obj) -> str:
     nm = getattr(obj, "name", None)
     if isinstance(nm, dict):
@@ -28,7 +38,10 @@ def list_dataflows(source_id: str, *, max_items: int | None = 200) -> list[Dataf
     c = get_client(source_id)
 
     # sdmx1: request dataflow list
-    msg = c.dataflow()
+    try:
+        msg = c.dataflow()
+    except NotImplementedError:
+        msg = c.dataflow(force=True)
 
     dflows = getattr(msg, "dataflow", None) or getattr(msg, "dataflows", None)
     if dflows is None:
@@ -80,7 +93,8 @@ def describe_dataset(source_id: str, dataset: str) -> list[DimensionInfo]:
     con nomi leggibili.
     """
     c = get_client(source_id)
-    msg = c.datastructure(dataset)
+    msg = _get_dsd_message(source_id, dataset)
+
 
     # Prendi la prima DSD disponibile
     dsd = getattr(msg, "structure", None)
@@ -115,7 +129,8 @@ def describe_dataset(source_id: str, dataset: str) -> list[DimensionInfo]:
 
 def list_dimension_codes(source_id: str, dataset: str, dim_id: str, *, max_items: int | None = 200) -> list[CodeInfo]:
     c = get_client(source_id)
-    msg = c.datastructure(dataset)
+    msg = _get_dsd_message(source_id, dataset)
+
 
     dsd = getattr(msg, "structure", None)
     if isinstance(dsd, dict) and dsd:
