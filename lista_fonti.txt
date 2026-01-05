@@ -1,0 +1,41 @@
+Eurostat
+
+SDMX 2.1 REST
+
+Macro UE (PIL, CPI, lavoro, conti nazionali, ecc.)
+
+ECB – European Central Bank
+
+SDMX 2.1 REST
+
+Tassi, credito, finanza, macro area euro
+
+OECD
+
+SDMX
+
+Macro, strutturali, educazione, produttività
+
+IMF – SDMX Central / Data Services
+
+SDMX
+
+Bilancia pagamenti, WEO, finanza pubblica
+
+BIS – Bank for International Settlements
+
+SDMX
+
+Dati bancari, credito, tassi globali
+
+UN SDMX Global Registry / UNSD
+
+SDMX
+
+Dataset ONU (meno omogenei, ma free)
+
+ISTAT
+
+SDMX
+
+Statistiche ufficiali italiane (come fonte, non come focus)

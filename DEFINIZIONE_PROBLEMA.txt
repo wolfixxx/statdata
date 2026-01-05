@@ -1,0 +1,95 @@
+5) Il problema chiave: “non conosco le sigle”
+
+Soluzione: metadata-first navigation.
+
+statdata deve permettere:
+
+vedere dataset disponibili (Dataflows)
+
+capire quali dimensioni esistono
+
+esplorare valori ammessi (codelist)
+
+costruire una query guidata
+
+6) Architettura concettuale (minima)
+A. Discovery (orientamento umano)
+
+list_sources()
+
+list_datasets(source)
+
+describe_dataset(source, dataset)
+
+dimensioni
+
+concetti
+
+frequenze
+
+list_codes(source, codelist)
+(es. paesi, unità, frequenze)
+
+👉 Questo è il cuore: aiuta chi non conosce SDMX.
+
+B. Query builder (guidato)
+
+Input umano:
+
+{
+  "source": "eurostat",
+  "dataset": "namq_10_gdp",
+  "filters": {
+    "geo": "IT",
+    "na_item": "B1GQ",
+    "unit": "CLV05_MEUR",
+    "s_adj": "CA",
+    "freq": "Q"
+  },
+  "start": "2015",
+  "end": "2024"
+}
+
+
+Il modulo:
+
+valida filtri contro i codelist
+
+costruisce la series_key SDMX
+
+genera la URL SDMX corretta
+
+C. Fetch (grezzo)
+
+Output possibili:
+
+sdmx.message.DataMessage (oggetto python-sdmx)
+
+SDMX-JSON (dict)
+
+SDMX-ML (bytes/string)
+
+opzionale: DataFrame solo se richiesto
+
+8) Regola d’oro del progetto
+
+Se una dimensione non è fissata, il sistema deve dirtelo prima di scaricare.
+
+Niente più:
+
+serie vuote
+
+dati ambigui
+
+zip sbagliati
+
+9) Prossimo step logico
+
+Se vuoi:
+
+definiamo sources.py (mappa ufficiale delle fonti SDMX)
+
+poi discovery.py (lista dataset + spiegazione umana)
+
+poi query.py (builder guidato)
+
