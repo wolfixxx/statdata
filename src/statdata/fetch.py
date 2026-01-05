@@ -15,6 +15,7 @@ from .sources import get_source
 class FetchResult:
     dataset: str
     series_key: str
+    params: dict[str, Any]
     raw: bytes | None          # raw SDMX-ML / SDMX-JSON
     message: Any | None        # oggetto python-sdmx (se parse riuscito)
     content_type: str | None
@@ -36,6 +37,7 @@ def fetch_data(bq: BuiltQuery, source_id: str, *, parse: bool = True) -> FetchRe
             return FetchResult(
                 dataset=bq.dataset,
                 series_key=bq.series_key,
+                params=bq.params,
                 raw=None,
                 message=msg,
                 content_type=None,
@@ -59,6 +61,7 @@ def fetch_data(bq: BuiltQuery, source_id: str, *, parse: bool = True) -> FetchRe
     return FetchResult(
         dataset=bq.dataset,
         series_key=bq.series_key,
+        params=bq.params,
         raw=r.content,
         message=None,
         content_type=r.headers.get("Content-Type"),
