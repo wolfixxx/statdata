@@ -1,0 +1,2 @@
+[console_scripts]
+statdata = statdata.cli:main

@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+src/statdata/__init__.py
+src/statdata/cli.py
+src/statdata/client.py
+src/statdata/discovery.py
+src/statdata/fetch.py
+src/statdata/formats.py
+src/statdata/query.py
+src/statdata/sources.py
+src/statdata.egg-info/PKG-INFO
+src/statdata.egg-info/SOURCES.txt
+src/statdata.egg-info/dependency_links.txt
+src/statdata.egg-info/entry_points.txt
+src/statdata.egg-info/requires.txt
+src/statdata.egg-info/top_level.txt

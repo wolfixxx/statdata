@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any
 
 from .fetch import FetchResult
@@ -43,6 +44,18 @@ def _gen_months(start: str, end: str) -> list[str]:
         if m == 13:
             m = 1
             y += 1
+    return out
+
+def _gen_days(start: str, end: str) -> list[str]:
+    # start/end: YYYY-MM-DD
+    d0 = datetime.fromisoformat(start)
+    d1 = datetime.fromisoformat(end)
+
+    out = []
+    d = d0
+    while d <= d1:
+        out.append(d.strftime("%Y-%m-%d"))
+        d += timedelta(days=1)
     return out
 
 
@@ -106,9 +119,11 @@ def to_minimal_series_dump(res: FetchResult) -> SeriesDump:
     start = res.params.get("startPeriod")
     end = res.params.get("endPeriod")
 
-    # mapping per serie trimestrali
+    # mapping per serie temporali
     if start and end:
-        if res.series_key.startswith("Q."):
+        if res.series_key.startswith("D."):
+            time_labels = _gen_days(start, end)
+        elif res.series_key.startswith("Q."):
             time_labels = _gen_quarters(start, end)
         elif res.series_key.startswith("A."):
             time_labels = _gen_years(start, end)

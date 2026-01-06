@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .client import get_client
-from .discovery import describe_dataset, list_dimension_codes
+from .discovery import _get_dsd_message, describe_dataset, list_dimension_codes
 
 
 class GuidedQueryError(ValueError):
@@ -42,11 +42,10 @@ def build_series_key(spec: QuerySpec, *, require_single_series: bool = True) -> 
     Costruisce una series_key SDMX corretta (ordine dimensioni) usando i metadata del dataset.
     Se require_single_series=True, richiede che tutte le dimensioni (tranne TIME) siano fissate.
     """
-    c = get_client(spec.source_id)
 
     # Recupera la struttura: determina ordine dimensioni e (se presenti) codelist
     # sdmx1: dsd(dataset_id=...) oppure datastructure(...). Usiamo dsd.
-    msg = c.datastructure(spec.dataset)
+    msg = _get_dsd_message(spec.source_id, spec.dataset)
 
     # Estrai DSD
     dsd = None

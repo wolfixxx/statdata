@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "statdata"
+version = "0.1.0"
+description = "SDMX-first data fetcher (no DB, no normalization)."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "sdmx1",
+  "requests",
+]
+
+[project.scripts]
+statdata = "statdata.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
