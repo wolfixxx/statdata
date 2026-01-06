@@ -1,4 +1,5 @@
-.statdata/
 __pycache__/
 *.pyc
-.env
+.venv/
+.statdata/
+.statdata_wizard.json
