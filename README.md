@@ -209,5 +209,25 @@ Eurostat validato end-to-end
 
 Altre fonti: in fase di hardening (endpoint inconsistenti SDMX)
 
+## Limitazioni conosciute
+
+SDMX non uniforme: stessa dimensione può chiamarsi geo / GEO / REF_AREA a seconda della fonte/dataset.
+
+Label mancanti: alcune fonti non forniscono nomi umani per dimensioni; spesso solo i codici hanno label.
+
+Time labels: per alcune risposte SDMX, i periodi tempo non arrivano come stringhe; statdata usa fallback basato su start/end + freq (funziona per serie regolari).
+
+Buchi temporali: se una serie ha missing period, il fallback tempo può non rappresentare correttamente i buchi (serve parsing SDMX-JSON o gestione più ricca).
+
+OECD: discovery dataset non passa da sdmx1 ma da endpoint REST + parsing minimale (id+name), quindi describe/codes/fetch possono richiedere test dataset-specifici.
+
+IMF: imf può esporre strutture; per dati si usa imf_data. (Hai escluso imf_data3 per instabilità parsing.)
+
+Performance: list_dimension_codes può essere pesante (es. geo con migliaia di codici).
+
+Rate limiting / timeouts: le API possono limitare o rispondere lentamente; al momento retry/backoff non è centralizzato.
+
+Compatibilità Python: Python 3.13 può richiedere dipendenze aggiuntive (es. packaging).
+
 
 
