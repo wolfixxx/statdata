@@ -37,6 +37,34 @@ def list_dataflows(source_id: str, *, max_items: int | None = 200) -> list[Dataf
     """
     c = get_client(source_id)
 
+    if source_id == "oecd":
+        import xml.etree.ElementTree as ET
+
+        import requests
+
+        url = "https://sdmx.oecd.org/public/rest/dataflow"
+        r = requests.get(url, timeout=60)
+        r.raise_for_status()
+
+        root = ET.fromstring(r.content)
+        ns = {
+            "mes": "http://www.sdmx.org/resources/sdmxml/schemas/v2_1/message",
+            "str": "http://www.sdmx.org/resources/sdmxml/schemas/v2_1/structure",
+            "com": "http://www.sdmx.org/resources/sdmxml/schemas/v2_1/common",
+        }
+
+        out: list[DataflowInfo] = []
+        for df in root.findall(".//str:Dataflow", ns):
+            df_id = df.attrib.get("id", "")
+            name_el = df.find(".//com:Name", ns)
+            name = (name_el.text or "").strip() if name_el is not None else ""
+            if df_id:
+                out.append(DataflowInfo(id=df_id, name=name))
+            if max_items is not None and len(out) >= max_items:
+                break
+        return out
+    
+
     # sdmx1: request dataflow list
     try:
         msg = c.dataflow()
@@ -92,7 +120,7 @@ def describe_dataset(source_id: str, dataset: str) -> list[DimensionInfo]:
     Ritorna le dimensioni del dataset in ordine (per costruire la series_key),
     con nomi leggibili.
     """
-    c = get_client(source_id)
+
     msg = _get_dsd_message(source_id, dataset)
 
 
@@ -128,7 +156,7 @@ def describe_dataset(source_id: str, dataset: str) -> list[DimensionInfo]:
 
 
 def list_dimension_codes(source_id: str, dataset: str, dim_id: str, *, max_items: int | None = 200) -> list[CodeInfo]:
-    c = get_client(source_id)
+    
     msg = _get_dsd_message(source_id, dataset)
 
 

@@ -46,6 +46,14 @@ SOURCES: dict[str, Source] = {
         base_url="https://sdmxcentral.imf.org/ws/public/sdmxapi/rest/",
         notes="IMF SDMX Central public REST API.",
     ),
+     # IMF_DATA SDMX 
+    "imf_data": Source(
+        id="imf_data",
+        name="IMF Data(SDMX 2.1)",
+        sdmx_id="IMF_DATA",
+        base_url="",
+        notes="IMF data endpoint via smdx1 source INF_DATA.",
+    ),
     # BIS SDMX
     "bis": Source(
         id="bis",

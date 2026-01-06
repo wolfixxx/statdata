@@ -130,8 +130,9 @@ def build_series_key(spec: QuerySpec, *, require_single_series: bool = True) -> 
                 did,
                 max_items=10,
             )
+            dim = dims_map.get(did)
             guidance[did] = {
-                "description": dims_map.get(did).name if did in dims_map else "",
+                "description": dim.name if dim is not None else "",
                 "examples": [(c.code, c.name) for c in codes],
             }
 
