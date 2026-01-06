@@ -15,6 +15,7 @@ from .formats import (
 )
 from .query import GuidedQueryError, QuerySpec, build_series_key
 from .sources import list_sources
+from .wizard import wizard as wizard_run
 
 
 def cmd_sources(_args: argparse.Namespace) -> int:
@@ -168,6 +169,9 @@ def main(argv: list[str] | None = None) -> int:
     pf.add_argument("--out-csv", default=None)
     pf.add_argument("--raw", action="store_true", help="Output raw SDMX bytes (no parse).")
     pf.set_defaults(fn=cmd_fetch)
+
+    pw = sub.add_parser("wizard", help="Interactive wizard to build a query and fetch data.")
+    pw.set_defaults(fn=lambda _args: wizard_run())
 
     args = p.parse_args(argv)
     return args.fn(args)

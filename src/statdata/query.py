@@ -4,7 +4,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .client import get_client
 from .discovery import _get_dsd_message, describe_dataset, list_dimension_codes
 
 

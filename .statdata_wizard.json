@@ -1,0 +1,8 @@
+{
+  "source_id": "ecb",
+  "dataset": "EXR",
+  "start": "2025-12-01",
+  "end": "2025-12-10",
+  "output": "print",
+  "out_path": "."
+}
