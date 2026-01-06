@@ -229,5 +229,7 @@ Rate limiting / timeouts: le API possono limitare o rispondere lentamente; al mo
 
 Compatibilità Python: Python 3.13 può richiedere dipendenze aggiuntive (es. packaging).
 
+## License
+MIT
 
 
