@@ -76,88 +76,154 @@ def _ask(prompt: str, default: Optional[str] = None) -> str:
 def _choose_from_list(title: str, items: list[tuple[str, str]], *, default_id: str | None = None) -> str:
     """
     items: [(id, name)]
-    Consente:
-      - selezione per numero
-      - inserimento id diretto
-      - ricerca (scrivi /testo)
+    Supporta:
+      - n / p: next/prev pagina
+      - /testo: ricerca per id o name
+      - numero: seleziona dalla pagina corrente
+      - id diretto
     """
     print(f"\n{title}")
-    view = items[:30]
-    for i, (iid, name) in enumerate(view, start=1):
-        print(f"{i:>2}. {iid}\t{name}")
-    if len(items) > len(view):
-        print(f"... (mostrati {len(view)} su {len(items)})")
+
+    page_size = 30
+    page = 0
+    view = items
+
+    def show_page() -> list[tuple[str, str]]:
+        nonlocal page
+        total = len(view)
+        pages = (total + page_size - 1) // page_size if total else 1
+        page = max(0, min(page, pages - 1))
+        start = page * page_size
+        end = min(start + page_size, total)
+
+        cur = view[start:end]
+        print(f"\nPagina {page+1}/{pages}  (voci {start+1}-{end} di {total})")
+        for i, (iid, name) in enumerate(cur, start=1):
+            print(f"{i:>2}. {iid}\t{name}")
+        return cur
+
+    cur_page = show_page()
 
     while True:
-        s = _ask("Seleziona (numero / id / /cerca):", default_id).strip()
+        s = _ask("Seleziona (n/p, numero, id, /cerca):", default_id).strip()
         if not s:
             continue
+
+        if s.lower() in ("n", "next"):
+            page += 1
+            cur_page = show_page()
+            continue
+        if s.lower() in ("p", "prev"):
+            page -= 1
+            cur_page = show_page()
+            continue
+
         if s.startswith("/"):
             q = s[1:].strip().lower()
-            hits = [(iid, name) for (iid, name) in items if q in (name or "").lower() or q in iid.lower()]
-            if not hits:
-                print("Nessun match.")
-                continue
-            view = hits[:30]
-            print("\nRisultati:")
-            for i, (iid, name) in enumerate(view, start=1):
-                print(f"{i:>2}. {iid}\t{name}")
-            if len(hits) > len(view):
-                print(f"... (mostrati {len(view)} su {len(hits)})")
+            if not q:
+                view = items
+            else:
+                view = [(iid, name) for (iid, name) in items if q in (name or "").lower() or q in iid.lower()]
+                if not view:
+                    print("Nessun match. (usa / per resettare)")
+                    continue
+            page = 0
+            cur_page = show_page()
             continue
+
         if s.isdigit():
             idx = int(s)
-            if 1 <= idx <= len(view):
-                return view[idx - 1][0]
-            print("Numero fuori range.")
+            if 1 <= idx <= len(cur_page):
+                return cur_page[idx - 1][0]
+            print("Numero fuori range per la pagina corrente.")
             continue
+
         # id diretto
         return s
 
 
 def _pick_code(source_id: str, dataset: str, dim_id: str) -> str:
     """
-    Mostra esempi e permette ricerca. Restituisce un CODE.
+    Wizard per selezionare un CODE con paginazione + ricerca.
+    Comandi:
+      - n / p: next/prev pagina
+      - /testo: ricerca per code o name
+      - numero: seleziona dalla pagina corrente
+      - CODE: inserimento diretto
     """
     print(f"\nDimensione: {dim_id}")
-    print("Suggerimento: puoi cercare scrivendo /testo (es. /italy, /usd, /daily)")
+    print("Comandi: n=next, p=prev, /testo=search, numero=select, oppure inserisci CODE direttamente")
 
-    # primo batch
-    codes = list_dimension_codes(source_id, dataset, dim_id, max_items=50)
-    view = [(c.code, c.name or "") for c in codes]
-    if not view:
-        # dimensione senza codelist (capita)
+    # Carica una lista "grande" una volta sola (evita continue chiamate)
+    # Nota: alcune dimensioni (geo) possono avere migliaia di codici.
+    big = list_dimension_codes(source_id, dataset, dim_id, max_items=100000)
+    items = [(c.code, c.name or "") for c in big]
+
+    if not items:
         return _ask(f"Inserisci valore per {dim_id} (nessuna lista disponibile):").strip()
 
-    for i, (code, name) in enumerate(view, start=1):
-        print(f"{i:>2}. {code}\t{name}")
+    page_size = 30
+    page = 0
+    view = items  # view corrente (può diventare risultato di ricerca)
+
+    def show_page() -> None:
+        nonlocal page
+        total = len(view)
+        pages = (total + page_size - 1) // page_size
+        if pages == 0:
+            print("(nessun risultato)")
+            return
+        page = max(0, min(page, pages - 1))
+        start = page * page_size
+        end = min(start + page_size, total)
+        print(f"\nPagina {page+1}/{pages}  (voci {start+1}-{end} di {total})")
+        for i, (code, name) in enumerate(view[start:end], start=1):
+            print(f"{i:>2}. {code}\t{name}")
+
+    show_page()
 
     while True:
-        s = _ask(f"Seleziona {dim_id} (numero / CODE / /cerca):").strip()
+        s = _ask(f"Scelta per {dim_id} (n/p,/q,numero,CODE):").strip()
         if not s:
             continue
+
+        if s.lower() in ("n", "next"):
+            page += 1
+            show_page()
+            continue
+        if s.lower() in ("p", "prev"):
+            page -= 1
+            show_page()
+            continue
+
         if s.startswith("/"):
             q = s[1:].strip().lower()
-            # usa batch più grande per cercare meglio
-            big = list_dimension_codes(source_id, dataset, dim_id, max_items=500)
-            hits = [(c.code, c.name or "") for c in big if q in (c.name or "").lower() or q in c.code.lower()]
-            if not hits:
-                print("Nessun match.")
+            if not q:
+                # reset ricerca
+                view = items
+                page = 0
+                show_page()
                 continue
-            view = hits[:50]
-            print("\nRisultati:")
-            for i, (code, name) in enumerate(view, start=1):
-                print(f"{i:>2}. {code}\t{name}")
-            if len(hits) > len(view):
-                print(f"... (mostrati {len(view)} su {len(hits)})")
+            hits = [(code, name) for (code, name) in items if q in code.lower() or q in name.lower()]
+            if not hits:
+                print("Nessun match. (usa / per resettare la ricerca)")
+                continue
+            view = hits
+            page = 0
+            show_page()
             continue
+
         if s.isdigit():
             idx = int(s)
-            if 1 <= idx <= len(view):
-                return view[idx - 1][0]
-            print("Numero fuori range.")
+            start = page * page_size
+            end = min(start + page_size, len(view))
+            if 1 <= idx <= (end - start):
+                return view[start + idx - 1][0]
+            print("Numero fuori range per la pagina corrente.")
             continue
-        return s  # CODE diretto
+
+        # CODE diretto (non validiamo qui per non fare chiamate extra)
+        return s
 
 
 def _pretty_http_error(e: Exception) -> str:

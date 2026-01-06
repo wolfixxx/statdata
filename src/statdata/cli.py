@@ -124,7 +124,7 @@ def cmd_fetch(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="statdata", description="SDMX-first data fetcher (no DB, no normalization).")
+    p = argparse.ArgumentParser(prog="statdata", description="SDMX data fetcher.")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     ps = sub.add_parser("sources", help="List sources.")
